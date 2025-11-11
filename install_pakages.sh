@@ -23,6 +23,12 @@ PACKAGES=(
     htop
     unzip
     wget
+    xdg-user-dirs
+    stow
+    nvim
+    starship
+    fzf
+    fastfetch
 )
 
 # ===== Optional: AUR packages (will use yay if installed) =====
