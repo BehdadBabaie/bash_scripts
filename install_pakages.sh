@@ -8,6 +8,8 @@ set -e  # Exit immediately if a command fails
 
 # ===== List of official repo packages =====
 PACKAGES=(
+    # lemurs
+    ly
     alacritty
     linux-headers 
     base-devel 
