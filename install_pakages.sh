@@ -29,6 +29,7 @@ PACKAGES=(
     starship
     fzf
     fastfetch
+    eza
 )
 
 # ===== Optional: AUR packages (will use yay if installed) =====
