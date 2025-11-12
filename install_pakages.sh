@@ -11,6 +11,7 @@ PACKAGES=(
     # lemurs
     ly
     alacritty
+    bash-completion
     linux-headers 
     base-devel 
     dkms 
