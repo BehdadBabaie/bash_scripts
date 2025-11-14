@@ -31,6 +31,7 @@ PACKAGES=(
     fzf
     fastfetch
     eza
+    unzip
 )
 
 # ===== Optional: AUR packages (will use yay if installed) =====
