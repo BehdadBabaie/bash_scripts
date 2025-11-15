@@ -32,6 +32,7 @@ PACKAGES=(
     fastfetch
     eza
     unzip
+    openssh
 )
 
 # ===== Optional: AUR packages (will use yay if installed) =====
