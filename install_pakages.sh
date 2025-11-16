@@ -33,6 +33,7 @@ PACKAGES=(
     eza
     unzip
     openssh
+    wget
 )
 
 # ===== Optional: AUR packages (will use yay if installed) =====
