@@ -34,6 +34,9 @@ PACKAGES=(
     unzip
     openssh
     wget
+    xorg
+    ttf-ubuntu-mono-nerd
+    ttf-ubuntu-nerd
 )
 
 # ===== Optional: AUR packages (will use yay if installed) =====
