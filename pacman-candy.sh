@@ -12,7 +12,7 @@ sudo sed -i '
     s/^#[[:space:]]*//    # uncomment Color
     a ILoveCandy          # add ILoveCandy on the next line
   }
-  /^[[:space:]]^\*#VerbosePkgLists/ s/^#[[:space:]]*//
+  /^[[:space:]]*#VerbosePkgLists/ s/^#[[:space:]]*//
 ' /etc/pacman.conf
 
 
