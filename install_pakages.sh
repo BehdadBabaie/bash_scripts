@@ -2,9 +2,9 @@
 # ---------------------------------------
 # Arch Linux Package Auto Installer
 # ---------------------------------------
-set -euo pipefail  # Better than just set -e
+set -euo pipefail  # Exit immediately if a command fails
 
-# Colors
+# ===== Colors for pretty output (optional but nice) =====
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m'
@@ -39,7 +39,7 @@ PACKAGES=(
     ttf-ubuntu-nerd
 )
 
-# Remove duplicates automatically
+# ===== Remove duplicates automatically =====
 mapfile -t PACKAGES < <(printf '%s\n' "${PACKAGES[@]}" | sort -u)
 
 # ===== AUR packages =====
@@ -83,7 +83,7 @@ if command -v tldr &>/dev/null; then
     tldr --update
 fi
 
-# Enable some useful services for VirtualBox / guest
+# ===== Enable some useful services for VirtualBox / guest ======
 if systemctl is-enabled vboxservice &>/dev/null || [ -x /usr/bin/VBoxService ]; then
     echo -e "${GREEN}==> Enabling VirtualBox guest services...${NC}"
     sudo systemctl enable --now vboxservice
