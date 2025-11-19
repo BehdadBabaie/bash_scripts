@@ -2,19 +2,21 @@
 # ---------------------------------------
 # Arch Linux Package Auto Installer
 # ---------------------------------------
-# Installs core utilities and updates system automatically.
+set -euo pipefail  # Better than just set -e
 
-set -e  # Exit immediately if a command fails
+# Colors
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
 
-# ===== List of official repo packages =====
+# ===== Packages from official repos =====
 PACKAGES=(
-    # lemurs
     ly
     alacritty
     bash-completion
-    linux-headers 
-    base-devel 
-    dkms 
+    linux-headers
+    base-devel
+    dkms
     virtualbox-guest-utils
     bat
     man-db
@@ -31,42 +33,62 @@ PACKAGES=(
     fzf
     fastfetch
     eza
-    unzip
     openssh
-    wget
     xorg
     ttf-ubuntu-mono-nerd
     ttf-ubuntu-nerd
 )
 
-# ===== Optional: AUR packages (will use yay if installed) =====
+# Remove duplicates automatically
+mapfile -t PACKAGES < <(printf '%s\n' "${PACKAGES[@]}" | sort -u)
+
+# ===== AUR packages =====
 AUR_PACKAGES=(
     brave-bin
     blesh-git
 )
 
-echo "======================================="
-echo " Arch Linux Package Installation Script"
-echo "======================================="
+echo -e "${YELLOW}=======================================${NC}"
+echo -e "${YELLOW}   Arch Linux Post-Install Script${NC}"
+echo -e "${YELLOW}=======================================${NC}"
 
-# ===== Update system and install main packages =====
-echo "==> Updating system and installing core packages..."
-sudo pacman -Syu --noconfirm "${PACKAGES[@]}"
+# ===== Update + install official packages (split to avoid set -e death) =====
+echo -e "${GREEN}==> Updating system...${NC}"
+sudo pacman -Sy --noconfirm
 
-# ===== Check and install AUR packages if yay is available =====
-if command -v yay &>/dev/null; then
-    echo "==> yay found, installing AUR packages..."
-    yay -S --noconfirm "${AUR_PACKAGES[@]}"
+echo -e "${GREEN}==> Installing core packages...${NC}"
+sudo pacman -S --needed --noconfirm "${PACKAGES[@]}"
+
+# ===== Install yay if missing =====
+if ! command -v yay &>/dev/null; then
+    echo -e "${GREEN}==> Installing yay from AUR...${NC}"
+    sudo pacman -S --needed --noconfirm git base-devel
+    git clone https://aur.archlinux.org/yay.git /tmp/yay
+    cd /tmp/yay
+    makepkg -si --noconfirm
+    cd /
+    rm -rf /tmp/yay
+    echo -e "${GREEN}✅ yay installed!${NC}"
 else
-    echo "⚠️  yay not found, skipping AUR packages."
+    echo -e "${GREEN}==> yay already installed${NC}"
 fi
 
-# ===== Update tldr cache =====
+# ===== Install AUR packages =====
+echo -e "${GREEN}==> Installing AUR packages...${NC}"
+yay -S --noconfirm "${AUR_PACKAGES[@]}"
+
+# ===== Final touches =====
 if command -v tldr &>/dev/null; then
-    echo "==> Updating TLDR cache..."
+    echo -e "${GREEN}==> Updating tldr cache...${NC}"
     tldr --update
 fi
 
-echo "======================================="
-echo "✅ All installations completed successfully!"
-echo "======================================="
+# Enable some useful services for VirtualBox / guest
+if systemctl is-enabled vboxservice &>/dev/null || [ -x /usr/bin/VBoxService ]; then
+    echo -e "${GREEN}==> Enabling VirtualBox guest services...${NC}"
+    sudo systemctl enable --now vboxservice
+fi
+
+echo -e "${YELLOW}=======================================${NC}"
+echo -e "${GREEN}✅ All done! Your system is ready.${NC}"
+echo -e "${YELLOW}=======================================${NC}"
