@@ -37,6 +37,7 @@ PACKAGES=(
     xorg
     # ==== Fonts =====
     ttf-meslo-nerd
+    ttf-firacode-nerd
     ttf-ubuntu-mono-nerd
     ttf-ubuntu-nerd
     # ==== dependencies for dwmblocks =====
