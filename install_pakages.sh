@@ -35,6 +35,8 @@ PACKAGES=(
     eza
     openssh
     xorg
+    # ==== Fonts =====
+    ttf-meslo-nerd
     ttf-ubuntu-mono-nerd
     ttf-ubuntu-nerd
     # ==== dependencies for dwmblocks =====
