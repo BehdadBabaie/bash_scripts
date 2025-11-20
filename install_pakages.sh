@@ -37,6 +37,13 @@ PACKAGES=(
     xorg
     ttf-ubuntu-mono-nerd
     ttf-ubuntu-nerd
+    # ==== dependencies for dwmblocks =====
+    xcb-util 
+    xcb-util-wm
+    xcb-util-xrm
+    lm_sensors
+    brightnessctl
+    pamixer
 )
 
 # ===== Remove duplicates automatically =====
