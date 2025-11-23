@@ -187,11 +187,15 @@ find_exec_for_wm() {
 }
 
 for wm in "${SELECT_WMS[@]}"; do
-  if execpath="$(find_exec_for_wm "$wm" 2>/dev/null || true)"; then
+  execpath=""  # initialize variable to prevent unbound variable error
+  execpath="$(find_exec_for_wm "$wm" 2>/dev/null || true)"
+  if [[ -n "$execpath" ]]; then
     install_session_file "$wm" "$execpath"
   elif [[ "$NONINTERACTIVE" != true ]]; then
     read -rp "Enter custom Exec for $wm (blank to skip): " ce
     [[ -n "$ce" ]] && install_session_file "$wm" "$ce"
+  else
+    log "No executable found for $wm, skipping .desktop creation"
   fi
 done
 
