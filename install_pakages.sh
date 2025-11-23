@@ -12,6 +12,7 @@ NC='\033[0m'
 # ===== Packages from official repos =====
 PACKAGES=(
     ly
+    lemurs
     alacritty
     bash-completion
     linux-headers
