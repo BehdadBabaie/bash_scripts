@@ -84,13 +84,18 @@ fi
 # -----------------------
 if [[ ${#AUR_PACKAGES[@]} -gt 0 ]]; then
   echo -e "${GREEN}==> Installing AUR packages...${NC}"
+  any_aur_installed=false
   for pkg in "${AUR_PACKAGES[@]}"; do
       if ! pacman -Q "$pkg" &>/dev/null; then
           run "yay -S --needed --noconfirm $pkg"
+          any_aur_installed=true
       else
           log "$pkg already installed, skipping"
       fi
   done
+  if [[ "$any_aur_installed" == false ]]; then
+      echo -e "${YELLOW}All AUR packages are already installed, nothing to do.${NC}"
+  fi
 fi
 
 # -----------------------
@@ -159,61 +164,38 @@ fi
 # -----------------------
 # Install .desktop files for selected WMs
 # -----------------------
-install_session_file() {
-  local name="$1" execpath="$2"
-  local dir
-  [[ "$name" =~ hyprland|sway ]] && dir="/usr/share/wayland-sessions" || dir="/usr/share/xsessions"
-  run "sudo mkdir -p '$dir'"
-  file="$dir/$name.desktop"
-  read -r -d '' DESKTOP <<EOF || true
-[Desktop Entry]
-Name=$name
-Comment=Start $name session
-Exec=$execpath
-Type=Application
-DesktopNames=$name
-EOF
-  run "echo '$DESKTOP' | sudo tee '$file' >/dev/null"
-  run "sudo chmod 644 '$file'"
-}
-
-find_exec_for_wm() {
-  local name="$1"
-  declare -A DEFAULT_EXEC=( [dwm]="/usr/local/bin/dwm" [bspwm]="/usr/bin/bspwm" [xmonad]="/usr/bin/xmonad" [i3]="/usr/bin/i3" [hyprland]="/usr/bin/Hyprland" [sway]="/usr/bin/sway" )
-  [[ -x "${DEFAULT_EXEC[$name]:-}" ]] && echo "${DEFAULT_EXEC[$name]}" && return 0
-  for p in "/usr/bin/$name" "/usr/local/bin/$name" "/bin/$name"; do [[ -x "$p" ]] && echo "$p" && return 0; done
-  for s in "$DOTFILES_DIR/start-$name" "$DOTFILES_DIR/scripts/start-$name" "$DOTFILES_DIR/$name/start" "$DOTFILES_DIR/$name/run"; do [[ -f "$s" ]] && chmod +x "$s" 2>/dev/null && echo "$s" && return 0; done
-  return 1
-}
-
-for wm in "${SELECT_WMS[@]}"; do
-  execpath=""  # initialize variable to prevent unbound variable error
-  execpath="$(find_exec_for_wm "$wm" 2>/dev/null || true)"
-  if [[ -n "$execpath" ]]; then
-    install_session_file "$wm" "$execpath"
-  elif [[ "$NONINTERACTIVE" != true ]]; then
-    read -rp "Enter custom Exec for $wm (blank to skip): " ce
-    [[ -n "$ce" ]] && install_session_file "$wm" "$ce"
-  else
-    log "No executable found for $wm, skipping .desktop creation"
-  fi
-done
+if [[ ${#SELECT_WMS[@]} -gt 0 ]]; then
+  for wm in "${SELECT_WMS[@]}"; do
+    execpath=""  # initialize variable to prevent unbound variable error
+    execpath="$(find_exec_for_wm "$wm" 2>/dev/null || true)"
+    if [[ -n "$execpath" ]]; then
+      install_session_file "$wm" "$execpath"
+    elif [[ "$NONINTERACTIVE" != true ]]; then
+      read -rp "Enter custom Exec for $wm (blank to skip): " ce
+      [[ -n "$ce" ]] && install_session_file "$wm" "$ce"
+    else
+      log "No executable found for $wm, skipping .desktop creation"
+    fi
+  done
+fi
 
 # -----------------------
 # Build WMs/tools safely
 # -----------------------
-for wm in "${SELECT_WMS[@]}"; do
-  case "$wm" in
-    dwm)
-      [[ -d "$DOTFILES_DIR/dwm" ]] && run "cd '$DOTFILES_DIR/dwm' && sudo make clean install"
-      [[ -d "$DOTFILES_DIR/dmenu" ]] && run "cd '$DOTFILES_DIR/dmenu' && sudo make clean install"
-      [[ -d "$DOTFILES_DIR/dwmblocks-async" ]] && run "cd '$DOTFILES_DIR/dwmblocks-async' && sudo make clean install"
-      ;;
-    bspwm|xmonad|i3|hyprland|sway)
-      [[ -d "$DOTFILES_DIR/$wm" ]] && run "cd '$DOTFILES_DIR/$wm' && sudo make clean install"
-      ;;
-  esac
-done
+if [[ ${#SELECT_WMS[@]} -gt 0 ]]; then
+  for wm in "${SELECT_WMS[@]}"; do
+    case "$wm" in
+      dwm)
+        [[ -d "$DOTFILES_DIR/dwm" ]] && run "cd '$DOTFILES_DIR/dwm' && sudo make clean install"
+        [[ -d "$DOTFILES_DIR/dmenu" ]] && run "cd '$DOTFILES_DIR/dmenu' && sudo make clean install"
+        [[ -d "$DOTFILES_DIR/dwmblocks-async" ]] && run "cd '$DOTFILES_DIR/dwmblocks-async' && sudo make clean install"
+        ;;
+      bspwm|xmonad|i3|hyprland|sway)
+        [[ -d "$DOTFILES_DIR/$wm" ]] && run "cd '$DOTFILES_DIR/$wm' && sudo make clean install"
+        ;;
+    esac
+  done
+fi
 
 # -----------------------
 # Detect and select DM
