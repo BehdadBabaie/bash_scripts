@@ -35,7 +35,7 @@ for arg in "$@"; do
 done
 
 log() { [[ "$VERBOSE" == true ]] && echo -e "$1"; }
-run() { [[ "$DRYRUN" == true ]] && echo "[DRY-RUN] $*" || eval "$*"; }
+run() { [[ "$DRYRUN" == true ]] && echo "[DRY-RUN] $*" || bash -c "$*"; }
 
 # -----------------------
 # Config
@@ -60,21 +60,21 @@ fi
 # System update and package installation
 # -----------------------
 echo -e "${GREEN}==> Updating system...${NC}"
-run sudo pacman -Syu --noconfirm
+run "sudo pacman -Syu --noconfirm"
 
 echo -e "${GREEN}==> Installing official packages...${NC}"
-run sudo pacman -S --needed --noconfirm "${PACKAGES[@]}"
+run "sudo pacman -S --needed --noconfirm ${PACKAGES[*]}"
 
 # -----------------------
 # Install yay (AUR helper)
 # -----------------------
 if ! command -v yay &>/dev/null; then
     echo -e "${GREEN}==> Installing yay...${NC}"
-    run sudo pacman -S --needed --noconfirm git base-devel
+    run "sudo pacman -S --needed --noconfirm git base-devel"
     TMPDIR=$(mktemp -d)
-    run git clone https://aur.archlinux.org/yay.git "$TMPDIR/yay"
-    run (cd "$TMPDIR/yay" && makepkg -si --noconfirm)
-    run rm -rf "$TMPDIR"
+    run "git clone https://aur.archlinux.org/yay.git '$TMPDIR/yay'"
+    run "cd '$TMPDIR/yay' && makepkg -si --noconfirm"
+    run "rm -rf '$TMPDIR'"
 else
     log "yay already installed"
 fi
@@ -86,7 +86,7 @@ if [[ ${#AUR_PACKAGES[@]} -gt 0 ]]; then
   echo -e "${GREEN}==> Installing AUR packages...${NC}"
   for pkg in "${AUR_PACKAGES[@]}"; do
       if ! pacman -Q "$pkg" &>/dev/null; then
-          run yay -S --needed --noconfirm "$pkg"
+          run "yay -S --needed --noconfirm $pkg"
       else
           log "$pkg already installed, skipping"
       fi
@@ -98,7 +98,7 @@ fi
 # -----------------------
 if [[ ! -d "$DOTFILES_DIR" ]]; then
   echo -e "${GREEN}==> Cloning dotfiles...${NC}"
-  run git clone "$DOTFILES_REPO" "$DOTFILES_DIR"
+  run "git clone '$DOTFILES_REPO' '$DOTFILES_DIR'"
 else
   log "Dotfiles already present, skipping clone"
 fi
@@ -113,12 +113,12 @@ if [[ -d "$DOTFILES_DIR" ]]; then
     module=${module%/}
     if [[ -d "$module" ]]; then
       log "Stowing $module"
-      run stow --target="$HOME" --no-folding "$module" || true
+      run "stow --target='$HOME' --no-folding '$module'" || true
     fi
   done
   if [[ -d "fonts/.local/share/fonts" || -d ".local/share/fonts" ]]; then
       log "Updating font cache"
-      run fc-cache -fv || true
+      run "fc-cache -fv" || true
   fi
   popd >/dev/null
 fi
@@ -132,7 +132,6 @@ for wm in "${KNOWN_WMS[@]}"; do
   [[ -d "$DOTFILES_DIR/$wm" ]] && AVAILABLE_WMS+=("$wm")
 done
 
-# Fallback system binaries
 for wm in "${KNOWN_WMS[@]}"; do
   if [[ -x "/usr/bin/$wm" || -x "/usr/local/bin/$wm" ]]; then
     [[ ! " ${AVAILABLE_WMS[*]} " =~ " $wm " ]] && AVAILABLE_WMS+=("$wm")
@@ -164,7 +163,7 @@ install_session_file() {
   local name="$1" execpath="$2"
   local dir
   [[ "$name" =~ hyprland|sway ]] && dir="/usr/share/wayland-sessions" || dir="/usr/share/xsessions"
-  run sudo mkdir -p "$dir"
+  run "sudo mkdir -p '$dir'"
   file="$dir/$name.desktop"
   read -r -d '' DESKTOP <<EOF || true
 [Desktop Entry]
@@ -174,8 +173,8 @@ Exec=$execpath
 Type=Application
 DesktopNames=$name
 EOF
-  run echo "$DESKTOP" | sudo tee "$file" >/dev/null
-  run sudo chmod 644 "$file"
+  run "echo '$DESKTOP' | sudo tee '$file' >/dev/null"
+  run "sudo chmod 644 '$file'"
 }
 
 find_exec_for_wm() {
@@ -197,17 +196,17 @@ for wm in "${SELECT_WMS[@]}"; do
 done
 
 # -----------------------
-# Build WMs/tools
+# Build WMs/tools safely
 # -----------------------
 for wm in "${SELECT_WMS[@]}"; do
   case "$wm" in
     dwm)
-      [[ -d "$DOTFILES_DIR/dwm" ]] && run (cd "$DOTFILES_DIR/dwm" && sudo make clean install)
-      [[ -d "$DOTFILES_DIR/dmenu" ]] && run (cd "$DOTFILES_DIR/dmenu" && sudo make clean install)
-      [[ -d "$DOTFILES_DIR/dwmblocks-async" ]] && run (cd "$DOTFILES_DIR/dwmblocks-async" && sudo make clean install)
+      [[ -d "$DOTFILES_DIR/dwm" ]] && run "cd '$DOTFILES_DIR/dwm' && sudo make clean install"
+      [[ -d "$DOTFILES_DIR/dmenu" ]] && run "cd '$DOTFILES_DIR/dmenu' && sudo make clean install"
+      [[ -d "$DOTFILES_DIR/dwmblocks-async" ]] && run "cd '$DOTFILES_DIR/dwmblocks-async' && sudo make clean install"
       ;;
     bspwm|xmonad|i3|hyprland|sway)
-      [[ -d "$DOTFILES_DIR/$wm" ]] && run (cd "$DOTFILES_DIR/$wm" && sudo make clean install)
+      [[ -d "$DOTFILES_DIR/$wm" ]] && run "cd '$DOTFILES_DIR/$wm' && sudo make clean install"
       ;;
   esac
 done
@@ -219,21 +218,21 @@ DM_CANDIDATES=(ly lemurs gdm sddm lightdm)
 DM_AVAILABLE=()
 for dm in "${DM_CANDIDATES[@]}"; do
   pacman -Q "$dm" &>/dev/null || systemctl list-unit-files | grep -q "^${dm}\.service" && DM_AVAILABLE+=("$dm")
- done
+done
 
 if [[ ${#DM_AVAILABLE[@]} -gt 0 ]]; then
   if [[ "$NONINTERACTIVE" == true ]]; then
     SELECTED_DM="${DM_AVAILABLE[0]}"
     echo -e "${GREEN}Enabling DM: $SELECTED_DM${NC}"
-    for d in ly lemurs gdm sddm lightdm; do run sudo systemctl disable --now "${d}.service" 2>/dev/null || true; done
-    run sudo systemctl enable --now "$SELECTED_DM.service"
+    for d in ly lemurs gdm sddm lightdm; do run "sudo systemctl disable --now '${d}.service' 2>/dev/null || true"; done
+    run "sudo systemctl enable --now '${SELECTED_DM}.service'"
   else
     echo "Available DMs:"
     for idx in "${!DM_AVAILABLE[@]}"; do printf " %d) %s\n" $((idx+1)) "${DM_AVAILABLE[$idx]}"; done
     read -rp "Select DM number (blank to skip): " dm_sel
     if [[ -n "$dm_sel" ]]; then
       sel=$((dm_sel-1))
-      (( sel >=0 && sel < ${#DM_AVAILABLE[@]} )) && SELECTED_DM="${DM_AVAILABLE[$sel]}" && echo -e "${GREEN}Enabling DM: $SELECTED_DM${NC}" && for d in ly lemurs gdm sddm lightdm; do run sudo systemctl disable --now "${d}.service" 2>/dev/null || true; done && run sudo systemctl enable --now "$SELECTED_DM.service"
+      (( sel >=0 && sel < ${#DM_AVAILABLE[@]} )) && SELECTED_DM="${DM_AVAILABLE[$sel]}" && echo -e "${GREEN}Enabling DM: $SELECTED_DM${NC}" && for d in ly lemurs gdm sddm lightdm; do run "sudo systemctl disable --now '${d}.service' 2>/dev/null || true"; done && run "sudo systemctl enable --now '${SELECTED_DM}.service'"
     fi
   fi
 fi
@@ -242,8 +241,8 @@ fi
 # Final touches
 # -----------------------
 echo -e "${GREEN}==> Updating TLDR and user directories...${NC}"
-run tldr --update || true
-run xdg-user-dirs-update || true
+run "tldr --update" || true
+run "xdg-user-dirs-update" || true
 
 echo -e "${YELLOW}=======================================${NC}"
 echo -e "${GREEN}✓ Full setup complete!${NC}"
