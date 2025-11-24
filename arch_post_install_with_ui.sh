@@ -16,7 +16,7 @@ NC='\033[0m'
 # =======================
 # Dotfiles repo
 # =======================
-DOTFILES_REPO="https://github.com/kakasia66/dotfiles.git"
+DOTFILES_REPO="https://github.com/BehdadBabaie/dotfiles.git"
 DOTFILES_DIR="$HOME/.dotfiles"
 
 # =======================
