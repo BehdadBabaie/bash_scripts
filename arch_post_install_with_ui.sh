@@ -43,9 +43,9 @@ run() {
 # Edit these to match your actual repos.
 # ---------------------------
 REPOS=(
-  "https://github.com/kakasia66/dotfiles.git .dotfiles"
-  "https://github.com/kakasia66/wallpapers.git Wallpapers"
-  "https://github.com/kakasia66/Fonts.git Fonts"
+  "https://github.com/BehdadBabaie/dotfiles.git .dotfiles"
+  "https://github.com/BehdadBabaie/wallpapers.git Wallpapers"
+  "https://github.com/BehdadBabaie/Fonts.git Fonts"
 )
 
 # ---------------------------
