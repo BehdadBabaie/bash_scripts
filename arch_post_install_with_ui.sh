@@ -52,12 +52,48 @@ REPOS=(
 # Default packages (edit to taste)
 # ---------------------------
 PACKAGES=(
-  base-devel git stow alacritty neovim starship curl wget unzip htop man-db tldr
-  fastfetch eza xorg xdg-user-dirs bash-completion brightnessctl pamixer lm_sensors
+   ly
+    lemurs
+    alacritty
+    bash-completion
+    linux-headers
+    base-devel
+    dkms
+    virtualbox-guest-utils
+    bat
+    man-db
+    tldr
+    git
+    curl
+    htop
+    unzip
+    wget
+    xdg-user-dirs
+    stow
+    nvim
+    starship
+    fzf
+    fastfetch
+    eza
+    openssh
+    xorg
+    # ==== Fonts =====
+    ttf-meslo-nerd
+    ttf-firacode-nerd
+    ttf-ubuntu-mono-nerd
+    ttf-ubuntu-nerd
+    # ==== dependencies for dwmblocks =====
+    xcb-util 
+    xcb-util-wm
+    xcb-util-xrm
+    lm_sensors
+    brightnessctl
+    pamixer
+    zsh 
 )
 
 # Add ly as optional display manager package if you want
-DM_PACKAGES=(ly)
+DM_PACKAGES=(ly lemurs)
 
 # AUR packages to install (edit)
 AUR_PACKAGES=(
