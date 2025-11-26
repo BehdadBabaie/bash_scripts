@@ -92,6 +92,7 @@ PACKAGES=(
    zsh
    feh 
    yazi
+   ueberzugpp
 )
 
 # Add ly as optional display manager package if you want

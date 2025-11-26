@@ -48,6 +48,8 @@ PACKAGES=(
     lm_sensors
     brightnessctl
     pamixer
+    yazi
+    ueberzugpp
 )
 
 # ===== Remove duplicates automatically =====
