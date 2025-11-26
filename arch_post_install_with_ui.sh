@@ -53,45 +53,45 @@ REPOS=(
 # ---------------------------
 PACKAGES=(
    ly
-    lemurs
-    alacritty
-    bash-completion
-    linux-headers
-    base-devel
-    dkms
-    virtualbox-guest-utils
-    bat
-    man-db
-    tldr
-    git
-    curl
-    htop
-    unzip
-    wget
-    xdg-user-dirs
-    stow
-    nvim
-    starship
-    fzf
-    fastfetch
-    eza
-    openssh
-    xorg
-    # ==== Fonts =====
-    ttf-meslo-nerd
-    ttf-firacode-nerd
-    ttf-ubuntu-mono-nerd
-    ttf-ubuntu-nerd
-    # ==== dependencies for dwmblocks =====
-    xcb-util 
-    xcb-util-wm
-    xcb-util-xrm
-    lm_sensors
-    brightnessctl
-    pamixer
-    zsh
-    feh 
-    yazi
+   lemurs
+   alacritty
+   bash-completion
+   linux-headers
+   base-devel
+   dkms
+   virtualbox-guest-utils
+   bat
+   man-db
+   tldr
+   git
+   curl
+   htop
+   unzip
+   wget
+   xdg-user-dirs
+   stow
+   nvim
+   starship
+   fzf
+   fastfetch
+   eza
+   openssh
+   xorg
+   # ==== Fonts =====
+   ttf-meslo-nerd
+   ttf-firacode-nerd
+   ttf-ubuntu-mono-nerd
+   ttf-ubuntu-nerd
+   # ==== dependencies for dwmblocks =====
+   xcb-util 
+   xcb-util-wm
+   xcb-util-xrm
+   lm_sensors
+   brightnessctl
+   pamixer
+   zsh
+   feh 
+   yazi
 )
 
 # Add ly as optional display manager package if you want
