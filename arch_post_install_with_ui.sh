@@ -89,7 +89,9 @@ PACKAGES=(
     lm_sensors
     brightnessctl
     pamixer
-    zsh 
+    zsh
+    feh 
+    yazi
 )
 
 # Add ly as optional display manager package if you want
@@ -248,72 +250,109 @@ stow_with_auto_adopt() {
 # WM / DM interactive steps
 # ---------------------------
 choose_wm_and_install_desktop() {
-  echo "Choose a Window Manager to create a session for (or press Enter to skip):"
-  WMS=("dwm" "i3" "bspwm" "openbox" "xmonad" "sway" "hyprland")
-  for i in "${!WMS[@]}"; do
-    echo " $((i+1))) ${WMS[$i]}"
-  done
-  read -rp "WM number (blank to skip): " wm_choice
-  if [[ -z "$wm_choice" ]]; then
-    SELECTED_WM=""
-    return
-  fi
-  if ! [[ "$wm_choice" =~ ^[0-9]+$ ]] || (( wm_choice < 1 || wm_choice > ${#WMS[@]} )); then
-    echo "Invalid choice; skipping."
-    SELECTED_WM=""
-    return
-  fi
-  SELECTED_WM="${WMS[$((wm_choice-1))]}"
-  echo "Selected WM: $SELECTED_WM"
+    echo "Choose a Window Manager to create a session for (or press Enter to skip):"
 
-  # find exec path heuristics
-  execpath=""
-  # common default map
-  declare -A DEFAULT_EXEC=( [dwm]="/usr/local/bin/dwm" [i3]="/usr/bin/i3" [bspwm]="/usr/bin/bspwm" [openbox]="/usr/bin/openbox-session" [xmonad]="/usr/bin/xmonad" [sway]="/usr/bin/sway" [hyprland]="/usr/bin/Hyprland" )
-  if [[ -n "${DEFAULT_EXEC[$SELECTED_WM]:-}" && -x "${DEFAULT_EXEC[$SELECTED_WM]}" ]]; then
-    execpath="${DEFAULT_EXEC[$SELECTED_WM]}"
-  else
-    # check dotfiles for start script
-    candidates=( "$HOME/.dotfiles/start-$SELECTED_WM" "$HOME/.dotfiles/scripts/start-$SELECTED_WM" "$HOME/.dotfiles/$SELECTED_WM/start" "$HOME/.dotfiles/$SELECTED_WM/run" )
-    for c in "${candidates[@]}"; do
-      if [[ -f "$c" ]]; then
-        execpath="$c"
-        chmod +x "$c" 2>/dev/null || true
-        break
-      fi
+    WMS=("dwm" "i3" "bspwm" "openbox" "xmonad" "sway" "hyprland")
+
+    # Display list
+    for i in "${!WMS[@]}"; do
+        echo " $((i+1))) ${WMS[$i]}"
     done
-  fi
 
-  if [[ -z "$execpath" ]]; then
-    if confirm "No executable found automatically for $SELECTED_WM. Enter custom Exec command now?"; then
-      read -rp "Exec: " execpath
+    # Loop until valid
+    while true; do
+        read -rp "WM number (blank to skip): " wm_choice
+
+        # User pressed Enter → skip
+        if [[ -z "$wm_choice" ]]; then
+            SELECTED_WM=""
+            return
+        fi
+
+        # Validate numeric input
+        if ! [[ "$wm_choice" =~ ^[0-9]+$ ]]; then
+            echo "Invalid input — please type a number from the list."
+            continue
+        fi
+
+        # Validate range
+        if (( wm_choice < 1 || wm_choice > ${#WMS[@]} )); then
+            echo "Invalid choice — select a number between 1 and ${#WMS[@]}."
+            continue
+        fi
+
+        # Valid selection
+        SELECTED_WM="${WMS[$((wm_choice-1))]}"
+        echo "Selected WM: $SELECTED_WM"
+        break
+    done
+
+    # -----------------------
+    # EXEC PATH DETECTION
+    # -----------------------
+
+    execpath=""
+
+    declare -A DEFAULT_EXEC=(
+        [dwm]="/usr/local/bin/dwm"
+        [i3]="/usr/bin/i3"
+        [bspwm]="/usr/bin/bspwm"
+        [openbox]="/usr/bin/openbox-session"
+        [xmonad]="/usr/bin/xmonad"
+        [sway]="/usr/bin/sway"
+        [hyprland]="/usr/bin/Hyprland"
+    )
+
+    if [[ -n "${DEFAULT_EXEC[$SELECTED_WM]:-}" && -x "${DEFAULT_EXEC[$SELECTED_WM]}" ]]; then
+        execpath="${DEFAULT_EXEC[$SELECTED_WM]}"
     else
-      echo "Skipping .desktop creation for $SELECTED_WM"
-      SELECTED_WM=""
-      return
+        candidates=(
+            "$HOME/.dotfiles/start-$SELECTED_WM"
+            "$HOME/.dotfiles/scripts/start-$SELECTED_WM"
+            "$HOME/.dotfiles/$SELECTED_WM/start"
+            "$HOME/.dotfiles/$SELECTED_WM/run"
+        )
+        for c in "${candidates[@]}"; do
+            if [[ -f "$c" ]]; then
+                execpath="$c"
+                chmod +x "$c" 2>/dev/null || true
+                break
+            fi
+        done
     fi
-  fi
 
-  # create xsessions/wayland-sessions dir as appropriate
-  if [[ "$SELECTED_WM" == "sway" || "$SELECTED_WM" == "hyprland" ]]; then
-    SES_DIR="/usr/share/wayland-sessions"
-  else
-    SES_DIR="/usr/share/xsessions"
-  fi
+    if [[ -z "$execpath" ]]; then
+        if confirm "No executable found automatically for $SELECTED_WM. Enter custom Exec command now?"; then
+            read -rp "Exec: " execpath
+        else
+            echo "Skipping .desktop creation for $SELECTED_WM"
+            SELECTED_WM=""
+            return
+        fi
+    fi
 
-  run "sudo mkdir -p '$SES_DIR'"
-  DESKTOP_PATH="$SES_DIR/$SELECTED_WM.desktop"
-  DESKTOP_CONTENT="[Desktop Entry]
+    # Xsessions / Wayland sessions
+    if [[ "$SELECTED_WM" == "sway" || "$SELECTED_WM" == "hyprland" ]]; then
+        SES_DIR="/usr/share/wayland-sessions"
+    else
+        SES_DIR="/usr/share/xsessions"
+    fi
+
+    run "sudo mkdir -p '$SES_DIR'"
+
+    DESKTOP_PATH="$SES_DIR/$SELECTED_WM.desktop"
+    DESKTOP_CONTENT="[Desktop Entry]
 Name=$SELECTED_WM
 Comment=Start $SELECTED_WM session
 Exec=$execpath
 Type=Application
 DesktopNames=$SELECTED_WM"
 
-  echo "Installing session file to $DESKTOP_PATH"
-  run "echo \"$DESKTOP_CONTENT\" | sudo tee '$DESKTOP_PATH' >/dev/null"
-  run "sudo chmod 644 '$DESKTOP_PATH'"
-  echo "Installed: $DESKTOP_PATH"
+    echo "Installing session file to $DESKTOP_PATH"
+    run "echo \"$DESKTOP_CONTENT\" | sudo tee '$DESKTOP_PATH' >/dev/null"
+    run "sudo chmod 644 '$DESKTOP_PATH'"
+
+    echo "Installed: $DESKTOP_PATH"
 }
 
 # ---------------------------
