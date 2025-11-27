@@ -62,6 +62,7 @@ PACKAGES=(
    xorg
    xorg-xinit
    ly          # Display Manager
+   lemurs
    feh         # Wallpaper
    yazi
    ueberzugpp
